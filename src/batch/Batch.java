@@ -38,4 +38,19 @@ public class Batch {
 	public CommandBucket GetCommands(){
 		return commands;
 	}
+	
+	public String findFile(String arg){
+		
+		CommandNode tempNode = commands.GetCommandList()[1];
+		
+		while(tempNode.GetNextNode() != null){
+			tempNode = tempNode.GetNextNode();
+			if(tempNode.GetCommand().GetID().equals(arg))
+				return tempNode.GetCommand().GetPath();
+		}
+		
+		return null;
+	}
+	
+	
 }

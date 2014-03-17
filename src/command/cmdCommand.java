@@ -42,5 +42,24 @@ public class cmdCommand extends Command {
 	
 	public String GetPath(){
 		return super.GetPath();
-	}	
+	}
+	
+	public String[] GetArgs(){
+		return args;
+	}
+	
+	public String GetInput(){
+		return in;
+	}
+	
+	public String GetOutput(){
+		return out;
+	}
+	
+	public String toString(){
+		String temp = this.GetPath();
+		for(int i = 0; i < args.length; i++)
+			temp = temp + " " + args[i];
+		return temp;
+	}
 }

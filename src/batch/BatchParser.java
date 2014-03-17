@@ -6,6 +6,9 @@
 package batch;
 
 import java.io.*;
+import java.util.*;
+import java.lang.ProcessBuilder.*;
+
 import javax.xml.parsers.*;
 import org.w3c.dom.*;
 import command.*;
@@ -87,6 +90,8 @@ public class BatchParser {
 		Command tempCommand;
 		File tempFile;
 		
+		ArrayList<ProcessBuilder> processes = new ArrayList<ProcessBuilder>();
+		
 		tempHolder = localBucket.GetCommandList();
 		
 		// Set working directory
@@ -100,6 +105,7 @@ public class BatchParser {
 		while(nodePointer.GetNextNode() != null){
 			nodePointer = nodePointer.GetNextNode();
 			tempCommand = nodePointer.GetCommand();
+			System.out.printf("File command on %s\n", tempCommand.GetPath());
 			if(!(tempFile = new File(batch.GetWorkingDir() + "/" + tempCommand.GetPath())).exists()){
 				try{
 					tempFile.createNewFile();
@@ -111,6 +117,60 @@ public class BatchParser {
 		}
 		
 		// Make processes
+		if(!batch.GetPipeFlag()){
+			nodePointer = tempHolder[2];
+			while(nodePointer.GetNextNode() != null){
+				nodePointer = nodePointer.GetNextNode();
+				tempCommand = nodePointer.GetCommand();
+				
+				System.out.printf("Command on %s: %s\n", tempCommand.GetID(), ((cmdCommand)tempCommand));
+				String[] cmdArguments = new String[((cmdCommand) tempCommand).GetArgs().length + 1];
+				cmdArguments[0] = tempCommand.GetPath();
+				System.arraycopy(((cmdCommand) tempCommand).GetArgs(), 0, cmdArguments, 1, ((cmdCommand) tempCommand).GetArgs().length);
+				
+				ProcessBuilder newProcessBuilder = new ProcessBuilder();
+				newProcessBuilder.directory(new File(batch.GetWorkingDir()));
+				newProcessBuilder.command(cmdArguments);
+				if(!((cmdCommand) tempCommand).GetInput().equals("")){
+					String infile = ((cmdCommand) tempCommand).GetInput();
+					if(batch.findFile(infile)==null);
+						//throw ; // TODO throw process exception
+					newProcessBuilder.redirectInput(new File(batch.GetWorkingDir()+"/"+batch.findFile(infile)));
+				}
+				else
+					newProcessBuilder.redirectInput(Redirect.INHERIT);
+				
+				if(!((cmdCommand) tempCommand).GetOutput().equals("")){
+					String outfile = ((cmdCommand) tempCommand).GetOutput();
+					if(batch.findFile(outfile)==null);
+					//throw ; // TODO throw process exception
+					newProcessBuilder.redirectOutput(new File(batch.GetWorkingDir()+"/"+batch.findFile(outfile)));
+				}
+				else
+					newProcessBuilder.redirectOutput(Redirect.INHERIT);
+				
+				processes.add(newProcessBuilder);
+			}
+		}
+		else{	// TODO Pipe processes
+			
+		}
 		// Run processes
+		for(ProcessBuilder pb: processes){
+			
+			String commandName = pb.command().get(0);
+			for(int i = 1; i < pb.command().size(); i++)
+				commandName = commandName + " " + pb.command().get(i);
+			
+			try{
+				Process runningProcess = pb.start();
+				System.out.printf("Waiting for Command %s to exit\n", commandName);
+				runningProcess.waitFor();
+				System.out.printf("Command %s has exited\n", commandName);
+			}
+			catch(Exception ex){
+				// TODO exception handling
+			}
+		}
 	}
 }

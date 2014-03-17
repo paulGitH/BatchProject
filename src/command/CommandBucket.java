@@ -64,7 +64,7 @@ public class CommandBucket {
 			return true;
 		}
 		else
-			return false;// TODO throw fault?
+			return false;// TODO throw unsupported command fault?
 	}
 
 }
