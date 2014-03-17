@@ -52,5 +52,15 @@ public class Batch {
 		return null;
 	}
 	
-	
+	public cmdCommand FindCmd(String arg){
+		CommandNode tempNode = commands.GetCommandList()[2];
+		
+		while(tempNode.GetNextNode() != null){
+			tempNode = tempNode.GetNextNode();
+			if(tempNode.GetCommand().GetID().equals(arg))
+				return (cmdCommand) tempNode.GetCommand();
+		}
+		
+		return null;
+	}
 }
