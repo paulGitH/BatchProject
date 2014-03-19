@@ -9,7 +9,10 @@ import java.io.*;
 import java.util.*;
 
 import javax.xml.parsers.*;
+
 import org.w3c.dom.*;
+import org.xml.sax.SAXException;
+
 import command.*;
 
 public class BatchParser {
@@ -17,19 +20,27 @@ public class BatchParser {
 	File inputFile;
 	Batch batch;
 	
-	public BatchParser(String fileName){
+	public BatchParser(String fileName) throws BatchException{
 		
 		batch = new Batch();	
 		inputFile = new File(fileName);
 		
 		if(inputFile.exists()){
-			Parse();
+			try {
+				Parse();
+			}
+			catch(BatchException ex){
+				throw ex;
+			}
 		}
-		else
-			;//TODO throw file not found exception
+		else{
+			//change
+			throw new BatchException("File: "+ fileName +" was not found");
+		}
+			
 	}
 	
-	private void Parse(){
+	private void Parse() throws BatchException {
 		try{
 			Command tempCommand = null;
 			
@@ -70,19 +81,31 @@ public class BatchParser {
 							batch.AddCommand(tempCommand);
 							break;
 						default:
-							// TODO throw exception for unexpected command type
-							break;
+							//change
+							throw new BatchException("Attempt to parse unknown command: "+ elem.getNodeName());
+							
 					}
 					
 				}
 			}
 		}
-		catch(Exception ex){
-			// TODO throw various exceptions for IOException and others
+		catch(IOException ex){
+			//change
+			//ex.printStackTrace();
+			throw new BatchException("Error occurred while parsing XML file", ex);
+		}
+		catch (ParserConfigurationException e) {
+			//Change
+			//e.printStackTrace();
+			throw new BatchException("ParserConfigurationException occured", e);
+		} catch (SAXException e) {
+			//change
+			//e.printStackTrace();
+			throw new BatchException("SAXException occured", e);
 		}
 	}
 	
-	public void RunBatch(){
+	public void RunBatch() throws BatchException{
 		
 		CommandBucket localBucket = batch.GetCommands();
 		CommandNode tempHolder[], nodePointer;
@@ -110,7 +133,10 @@ public class BatchParser {
 					tempFile.createNewFile();
 				}
 				catch(IOException ex){
-					// TODO handle exception
+					//change
+					//ex.printStackTrace();
+					throw new BatchException("Could not create file: " + batch.GetWorkingDir() + "/" + tempCommand.GetPath());
+					
 				}
 			}
 		}
@@ -132,15 +158,21 @@ public class BatchParser {
 				newProcessBuilder.command(cmdArguments);
 				if(!(((cmdCommand) tempCommand).GetInput().equals("")||((cmdCommand) tempCommand).GetInput().equalsIgnoreCase("pipe"))){
 					String infile = ((cmdCommand) tempCommand).GetInput();
-					if(batch.findFile(infile)==null);
-						//throw ; // TODO throw process exception
+					if(batch.findFile(infile)==null){
+						//change
+						throw new BatchException("Could not locate file ID: " + infile);
+					}
+						
 					newProcessBuilder.redirectInput(new File(batch.GetWorkingDir()+"/"+batch.findFile(infile)));
 				}
 				
 				if(!(((cmdCommand) tempCommand).GetOutput().equals("")||((cmdCommand) tempCommand).GetOutput().equalsIgnoreCase("pipe"))){
 					String outfile = ((cmdCommand) tempCommand).GetOutput();
-					if(batch.findFile(outfile)==null);
-					//throw ; // TODO throw process exception
+					if(batch.findFile(outfile)==null){
+						//change
+						throw new BatchException("Could not locate file ID: " + outfile);
+					}
+					
 					newProcessBuilder.redirectOutput(new File(batch.GetWorkingDir()+"/"+batch.findFile(outfile)));
 				}
 				
@@ -154,8 +186,11 @@ public class BatchParser {
 			System.out.printf("Pipe Command: %s; Execution of commands will be deferred\n", pipeInfo.GetID());
 			
 			cmdCommand command1 = batch.FindCmd(pipeInfo.GetCmd1());
-			if(command1 == null);
-				// TODO throw process exception
+			if(command1 == null){
+				//change
+				throw new BatchException("Could not locate command ID: " + pipeInfo.GetCmd1());
+			}
+				
 			String[] cmd1Args = new String[command1.GetArgs().length +1];
 			cmd1Args[0] = command1.GetPath();
 			System.arraycopy(command1.GetArgs(), 0, cmd1Args, 1, command1.GetArgs().length);
@@ -170,8 +205,11 @@ public class BatchParser {
 			
 			
 			cmdCommand command2 = batch.FindCmd(pipeInfo.GetCmd2());
-			if(command2 == null);
-				// TODO throw process exception
+			if(command2 == null){
+				//change
+				throw new BatchException("Could not locate command ID: " + pipeInfo.GetCmd2());
+			}
+				
 			String[] cmd2Args = new String[command2.GetArgs().length +1];
 			cmd2Args[0] = command2.GetPath();
 			System.arraycopy(command2.GetArgs(), 0, cmd2Args, 1, command2.GetArgs().length);
@@ -199,8 +237,13 @@ public class BatchParser {
 					runningProcess.waitFor();
 					System.out.printf("Command %s has exited\n", commandName);
 				}
-				catch(Exception ex){
-					// TODO exception handling
+				catch(IOException ex){
+					//change
+					//ex.printStackTrace();
+					throw new BatchException("IOException occurred while creating process: " + commandName, ex);
+				}
+				catch(InterruptedException ex){
+					throw new BatchException("InterruptedException occurred while waiting for process: "+ commandName, ex);
 				}
 			}
 		}
@@ -208,8 +251,8 @@ public class BatchParser {
 			
 			Process process1, process2;
 			
-			BufferedInputStream inFromProc1;
-			BufferedOutputStream outToProc2;
+			BufferedInputStream inFromProc1 = null;
+			BufferedOutputStream outToProc2 = null;
 			
 			String command1Name="", command2Name="";
 			
@@ -246,10 +289,32 @@ public class BatchParser {
 								
 			}
 			catch(IOException ex){
-				// TODO handle exception
+				//change
+				//ex.printStackTrace();
+				throw new BatchException("IOException occurred while creating pipe commands", ex);
 			}
 			catch(InterruptedException ex){
-				// TODO handle exception
+				//change
+				//ex.printStackTrace();
+				throw new BatchException("InterruptedException occurred while waiting for pipe command", ex);
+			}
+			finally{
+				if(inFromProc1 != null)
+					try{
+						inFromProc1.close();
+					}
+					catch(IOException ex){
+						throw new BatchException("IOException occured while closing pipe", ex);
+					}
+				if(outToProc2 != null){
+					try{
+						outToProc2.flush();
+						outToProc2.close();
+					}
+					catch(IOException ex){
+						throw new BatchException("IOException occured while closing pipe", ex);
+					}
+				}
 			}
 		}
 		
