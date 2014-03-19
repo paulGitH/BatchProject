@@ -2,22 +2,20 @@ package command;
 
 import org.w3c.dom.Element;
 
+/*
+ * Class representing pipe commands in batch files
+ */
 public class pipeCommand extends Command {
 	
-	String cmd1;
-	String cmd2;
+	// Stores command IDs in pipeCommand
+	private String cmd1;
+	private String cmd2;
 	
+	// Constructors
 	public pipeCommand() {
 		super((String) null, (String) null);
 		this.cmd1 = null;
 		this.cmd2 = null;
-	}
-	
-	public void ParseCommand(Element elem){
-		this.id = elem.getAttribute("id");
-		this.path = elem.getAttribute("path");
-		this.cmd1 = elem.getAttribute("cmd1");
-		this.cmd2 = elem.getAttribute("cmd2");
 	}
 
 	public pipeCommand(String ID, String CMD1, String CMD2) {
@@ -26,6 +24,15 @@ public class pipeCommand extends Command {
 		this.cmd2 = CMD2;		
 	}
 	
+	// Extracts pipeCommand data from Document element
+	public void ParseCommand(Element elem){
+		this.id = elem.getAttribute("id");
+		this.path = elem.getAttribute("path");
+		this.cmd1 = elem.getAttribute("cmd1");
+		this.cmd2 = elem.getAttribute("cmd2");
+	}
+	
+	// Set/Get functions
 	public void SetID(String arg){
 		super.SetID(arg);
 	}

@@ -1,20 +1,24 @@
 package command;
 
 import org.w3c.dom.Element;
-
+/*
+ * Abstract Command class that contains the ID, and path for any command 
+ */
 abstract public class Command {
 	String id;
 	String path;
 	
-	Command(){
+	// Constructors
+	public Command(){
 		this((String)null, (String)null); 
 	}
 
-	Command(String ID, String PATH){
+	public Command(String ID, String PATH){
 		this.id = ID;
 		this.path = PATH;
 	}
 	
+	// Set/Get functions 
 	void SetID(String arg){
 		this.id = arg;
 	}
@@ -31,5 +35,6 @@ abstract public class Command {
 		return path;
 	}
 	
+	// Abstract method that parses command data from a document element
 	public abstract void ParseCommand(Element elem);
 }
